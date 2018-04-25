@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 214243dbae5c541b69db738a63e47b15
+timeCreated: 1507124783
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Edit Undo BRK
+  fontNames:
+  - Edit Undo BRK
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

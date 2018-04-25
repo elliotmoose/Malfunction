@@ -1,0 +1,143 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class PlayerControls : MonoBehaviour
+{
+	//SETTINGS
+	public bool allowUITouchesToFireEvents = false;
+
+	//runtime variables
+	private float mouseDownTime = 0;
+	private Vector3 lastTouchPosition;
+	private bool lastTouchWasUI = false;
+	private bool wasLastFrameZooming = false;
+	private float lastZoomDistance = 0;
+	//this is set to true when exactly 2 touches were on screen
+
+
+	public delegate void PlayerControlDelegate (Vector3 information);
+
+	public PlayerControlDelegate longTouchEvent;
+	public PlayerControlDelegate touchEndEvent;
+	public PlayerControlDelegate touchBeginEvent;
+	public PlayerControlDelegate touchMovedEvent;
+	public PlayerControlDelegate touchZoomEvent;
+
+
+	// Use this for initialization
+	void Start ()
+	{
+	}
+
+	// Update is called once per frame
+	void Update ()
+	{		
+		if (EventSystem.current.IsPointerOverGameObject ()) {
+			lastTouchWasUI = true;
+			return;
+		}
+
+		foreach (Touch touch in Input.touches) {
+			int id = touch.fingerId;
+			if (EventSystem.current.IsPointerOverGameObject (id)) {
+				lastTouchWasUI = true;
+				return;
+			}
+		}
+
+
+		#region touch delegate configurations
+		//if mouse is held down
+		if (Input.GetMouseButton (0)) {
+
+			//check for touch movement
+			if (lastTouchPosition != FirstTouchPosition ()) {
+				if (touchMovedEvent != null) {
+					touchMovedEvent (FirstTouchPosition ());				
+				}
+
+				lastTouchPosition = FirstTouchPosition ();
+			}
+
+
+			if (mouseDownTime > 0.2) {
+				//trigger output long touch event	
+				if (longTouchEvent != null) {
+					longTouchEvent (Input.mousePosition);				
+				}
+			} else {
+				mouseDownTime += Time.deltaTime;			
+			}
+
+
+		}
+
+
+		if (Input.GetMouseButtonDown (0)) {
+			if (touchBeginEvent != null) {
+				touchBeginEvent (FirstTouchPosition ());			
+			}
+		}
+
+		if (Input.GetMouseButtonUp (0)) {
+			mouseDownTime = 0;
+
+			if (lastTouchWasUI) {
+				lastTouchWasUI = false;
+			} else {
+
+				//trigger touch up event		
+				if (touchEndEvent != null) {
+					touchEndEvent (FirstTouchPosition ());				
+				}
+			}
+
+
+		}
+
+		//zoom
+		if (Input.touchCount == 2) {
+			Vector2 firstTouchCoordinates = Input.GetTouch (0).position;
+			Vector2 secondTouchCoordinates = Input.GetTouch (1).position;
+
+			float touchDistance = Vector2.Distance (firstTouchCoordinates, secondTouchCoordinates);
+
+			if (wasLastFrameZooming) {
+
+				float currentZoomDistance = touchDistance;
+				float zoomDelta = (lastZoomDistance - currentZoomDistance);
+
+				if (touchZoomEvent != null) {
+					touchZoomEvent (new Vector3 (0, zoomDelta, 0));
+				}
+
+				lastZoomDistance = currentZoomDistance;
+
+			} else {
+
+				lastZoomDistance = touchDistance;
+
+				wasLastFrameZooming = true;
+			}
+
+		} else {
+			//end zoom
+			wasLastFrameZooming = false;
+			lastZoomDistance = 0;
+
+		}
+		#endregion
+
+	}
+
+	private Vector3 FirstTouchPosition ()
+	{
+		if (Input.touchCount == 0) {
+			return Input.mousePosition;
+		} else {
+			return Input.GetTouch (0).position;
+		}
+	}
+}
